@@ -47,6 +47,38 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("manual");
   const [error, setError] = useState("");
+  const [saveStatus, setSaveStatus] = useState(""); // "saving" | "saved" | "error" | ""
+
+  const SHEET_URL = "https://script.google.com/macros/s/AKfycbyCMhpoF1vZ1lWWhoai-essZgoUXLRiEBljwdIFaDQwFMBzj3lz-aM9f0Lfhsf3iSyt/exec";
+
+  async function savePitch() {
+    if (!pitch) return;
+    setSaveStatus("saving");
+    try {
+      await fetch(SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          date: new Date().toLocaleString(),
+          pitch,
+          genre: selections.genres.join(", "),
+          themes: selections.themes.join(", "),
+          setting: selections.settings.join(", "),
+          archetypes: selections.archetypes.join(", "),
+          conflicts: selections.conflicts.join(", "),
+          plot: selections.plots.join(", "),
+          narration: selections.narration.join(", "),
+          vibe: vibe || "",
+        }),
+      });
+      setSaveStatus("saved");
+      setTimeout(() => setSaveStatus(""), 3000);
+    } catch (e) {
+      setSaveStatus("error");
+      setTimeout(() => setSaveStatus(""), 3000);
+    }
+  }
 
   function randomizeAll() {
     setSelections({
@@ -440,23 +472,25 @@ Write ONLY the pitch paragraph. No title, no preamble, no labels.`;
               </div>
             )}
 
-            <button
-              onClick={generatePitch}
-              style={{
-                marginTop: 20,
-                padding: "8px 18px",
-                background: "transparent",
-                color: "#8a7a64",
-                border: "1px solid #2a2218",
-                cursor: "pointer",
-                fontSize: 11,
-                fontFamily: "monospace",
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-              }}
-            >
-              ↺ Regenerate
-            </button>
+            <div style={{ display: "flex", gap: 10, marginTop: 20, alignItems: "center" }}>
+              <button onClick={generatePitch} style={{ padding: "8px 18px", background: "transparent", color: "#8a7a64", border: "1px solid #2a2218", cursor: "pointer", fontSize: 11, fontFamily: "monospace", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+                ↺ Regenerate
+              </button>
+              <button
+                onClick={savePitch}
+                disabled={saveStatus === "saving"}
+                style={{
+                  padding: "8px 18px",
+                  background: saveStatus === "saved" ? "#1a2a1a" : "#1a1a2a",
+                  color: saveStatus === "saved" ? "#8fd48f" : saveStatus === "error" ? "#f48a8a" : "#8aabf4",
+                  border: `1px solid ${saveStatus === "saved" ? "#5a9a5a" : saveStatus === "error" ? "#c84a4a" : "#4a6ac8"}`,
+                  cursor: saveStatus === "saving" ? "not-allowed" : "pointer",
+                  fontSize: 11, fontFamily: "monospace", letterSpacing: "0.1em", textTransform: "uppercase", transition: "all 0.2s",
+                }}
+              >
+                {saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "✓ Saved to Sheet" : saveStatus === "error" ? "✗ Save Failed" : "↗ Save to Sheet"}
+              </button>
+            </div>
           </div>
         )}
       </div>
