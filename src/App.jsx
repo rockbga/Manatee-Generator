@@ -162,10 +162,20 @@ Write ONLY the pitch paragraph. No title, no preamble, no labels.`;
         }),
       });
       const data = await response.json();
+      if (!response.ok) {
+        setError(`API error ${response.status}: ${JSON.stringify(data)}`);
+        setLoading(false);
+        return;
+      }
       const text = data.content?.map(b => b.text || "").join("") || "";
+      if (!text) {
+        setError(`No text returned. Raw response: ${JSON.stringify(data)}`);
+        setLoading(false);
+        return;
+      }
       setPitch(text.trim());
     } catch (e) {
-      setError("Something went wrong generating the pitch. Try again.");
+      setError(`Error: ${e.message}`);
     }
     setLoading(false);
   }
