@@ -92,11 +92,20 @@ export default function App() {
     });
   }
 
+  const NO_PREF = "No Preference";
+
   function toggleItem(cat, item) {
     setSelections(prev => {
       const cur = prev[cat];
-      if (cur.includes(item)) return { ...prev, [cat]: cur.filter(i => i !== item) };
-      return { ...prev, [cat]: [...cur, item] };
+      if (item === NO_PREF) {
+        // toggle No Preference — clears other selections for that category
+        if (cur.includes(NO_PREF)) return { ...prev, [cat]: [] };
+        return { ...prev, [cat]: [NO_PREF] };
+      }
+      // selecting a real item clears No Preference
+      const without = cur.filter(i => i !== NO_PREF);
+      if (without.includes(item)) return { ...prev, [cat]: without.filter(i => i !== item) };
+      return { ...prev, [cat]: [...without, item] };
     });
   }
 
@@ -116,7 +125,10 @@ export default function App() {
 
     const selectionSummary = Object.entries(selections)
       .filter(([, v]) => v.length > 0)
-      .map(([k, v]) => `${LABEL_MAP[k]}: ${v.join(", ")}`)
+      .map(([k, v]) => {
+        if (v.includes(NO_PREF)) return `${LABEL_MAP[k]}: freestyle — surprise me`;
+        return `${LABEL_MAP[k]}: ${v.join(", ")}`;
+      })
       .join("\n");
 
     const vibeNote = vibe ? `\nCreator's vibe/mood note: "${vibe}"` : "";
@@ -124,6 +136,8 @@ export default function App() {
     const prompt = `You are a creative developer for scripted fiction audio dramas and podcasts. 
     
 Based on the following story elements, write a compelling short paragraph pitch (3-5 sentences) for an original audio drama concept. 
+
+Where an element says "freestyle — surprise me", make a bold, unexpected choice for that element rather than defaulting to something generic.
 
 The pitch should:
 - Hook immediately with a vivid, specific premise
@@ -138,7 +152,7 @@ ${selectionSummary}${vibeNote}
 Write ONLY the pitch paragraph. No title, no preamble, no labels.`;
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
+      const response = await fetch("/api/generate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -297,6 +311,28 @@ Write ONLY the pitch paragraph. No title, no preamble, no labels.`;
                   )}
                 </div>
                 <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {/* No Preference chip */}
+                  {(() => {
+                    const sel = selections[cat].includes(NO_PREF);
+                    return (
+                      <button
+                        key="no-pref"
+                        onClick={() => toggleItem(cat, NO_PREF)}
+                        style={{
+                          padding: "5px 12px",
+                          fontSize: 12,
+                          background: sel ? "#2a2218" : "transparent",
+                          border: `1px dashed ${sel ? "#8a7a64" : "#3a3228"}`,
+                          color: sel ? "#c8b878" : "#4a3a28",
+                          cursor: "pointer",
+                          borderRadius: 2,
+                          transition: "all 0.12s",
+                          fontFamily: "monospace",
+                          fontStyle: "italic",
+                        }}
+                      >✦ No Preference</button>
+                    );
+                  })()}
                   {DATA[cat].map(item => {
                     const sel = selections[cat].includes(item);
                     const c = CHIP_COLORS[cat];
@@ -461,11 +497,12 @@ Write ONLY the pitch paragraph. No title, no preamble, no labels.`;
                       <span key={`${k}-${item}`} style={{
                         padding: "3px 8px",
                         fontSize: 11,
-                        background: CHIP_COLORS[k].bg,
-                        color: CHIP_COLORS[k].text,
-                        border: `1px solid ${CHIP_COLORS[k].border}`,
-                        opacity: 0.7,
-                      }}>{item}</span>
+                        background: item === NO_PREF ? "#2a2218" : CHIP_COLORS[k].bg,
+                        color: item === NO_PREF ? "#c8b878" : CHIP_COLORS[k].text,
+                        border: `1px ${item === NO_PREF ? "dashed #8a7a64" : `solid ${CHIP_COLORS[k].border}`}`,
+                        opacity: 0.8,
+                        fontStyle: item === NO_PREF ? "italic" : "normal",
+                      }}>{item === NO_PREF ? `✦ ${LABEL_MAP[k]}: freestyle` : item}</span>
                     ))
                   )}
                 </div>
