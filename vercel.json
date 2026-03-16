@@ -5,6 +5,9 @@
   "functions": {
     "api/generate.js": {
       "runtime": "nodejs20.x"
+    },
+    "api/save.js": {
+      "runtime": "nodejs20.x"
     }
   }
 }

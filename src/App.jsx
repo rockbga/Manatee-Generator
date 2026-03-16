@@ -55,9 +55,8 @@ export default function App() {
     if (!pitch) return;
     setSaveStatus("saving");
     try {
-      await fetch(SHEET_URL, {
+      const response = await fetch("/api/save", {
         method: "POST",
-        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           date: new Date().toLocaleString(),
@@ -72,7 +71,11 @@ export default function App() {
           vibe: vibe || "",
         }),
       });
-      setSaveStatus("saved");
+      if (response.ok) {
+        setSaveStatus("saved");
+      } else {
+        setSaveStatus("error");
+      }
       setTimeout(() => setSaveStatus(""), 3000);
     } catch (e) {
       setSaveStatus("error");
