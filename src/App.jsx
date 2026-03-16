@@ -49,7 +49,7 @@ export default function App() {
   const [error, setError] = useState("");
   const [saveStatus, setSaveStatus] = useState(""); // "saving" | "saved" | "error" | ""
 
-  const SHEET_URL = "https://script.google.com/macros/s/AKfycbyCMhpoF1vZ1lWWhoai-essZgoUXLRiEBljwdIFaDQwFMBzj3lz-aM9f0Lfhsf3iSyt/exec";
+  const SHEET_URL = "https://script.google.com/macros/s/AKfycby1fYSxkUt_nr2AXocNkbapriDzR17IF4Bc4E-s2PiJiM_X6_6ErAiCKds_BB6ABzNN/exec";
 
   async function savePitch() {
     if (!pitch) return;
